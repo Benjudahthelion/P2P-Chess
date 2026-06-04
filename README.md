@@ -1,5 +1,3 @@
-# P2P-Chess
-
 # ♞ P2P Professional Chess Client
 
 A lightweight, high-performance, **zero-backend web application** designed for direct player-to-player chess matches. With no sign-ups, no databases, and no cloud accounts required, you can establish an instantaneous connection to play a secure, real-time match with friends, family, or rivals — even while on road trips, during commutes, or on local network connections!
