@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>P2P chess Match Engine</title>
+    
+    <!-- Loaded CDNs: Chess.js v0.10.3 and PeerJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    
+    <!-- Custom styling stylesheet -->
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div class="match-engine-container" id="match-engine-container">
+      
+      <!-- LEFT COLUMN: Chessboard Platform -->
+      <section class="board-column" id="board-column">
+        
+        <!-- Opponent Player Profile HUD -->
+        <div class="player-hud opponent-hud" id="opponent-hud">
+          <div class="hud-identity">
+            <span class="player-role-indicator black-role" id="opponent-role-badge">⚫</span>
+            <span class="player-name" id="opponent-name">Waiting...</span>
+          </div>
+          <!-- Digital Tournament Timer -->
+          <div class="hud-timer" id="opponent-timer">05:00</div>
+          <!-- Visual captured collection layout -->
+          <div class="captured-row" id="opponent-captured-pieces"></div>
+        </div>
+
+        <!-- Perfect Responsive Chessboard Frame -->
+        <main class="chessboard-wrapper" id="chessboard-wrapper">
+          <div class="chessboard-container" id="chessboard">
+            <!-- Drawn dynamically in JS -->
+          </div>
+
+          <!-- Solid Overlay for Match Ending -->
+          <div class="gameover-overlay" id="gameover-curtain">
+            <div class="gameover-content">
+              <h3 class="gameover-title" id="gameover-header">Victory</h3>
+              <p class="gameover-subtitle" id="gameover-message">You checked the opponent's king.</p>
+              <button class="action-btn block-btn" id="btn-gameover-close">New Game</button>
+            </div>
+          </div>
+        </main>
+
+        <!-- Active Player Profile HUD -->
+        <div class="player-hud player-own-hud" id="player-hud">
+          <div class="hud-identity">
+            <span class="player-role-indicator white-role" id="player-role-badge">⚪</span>
+            <span class="player-name" id="player-name">Practice Board</span>
+          </div>
+          <!-- Digital Tournament Timer -->
+          <div class="hud-timer" id="player-timer">05:00</div>
+          <!-- Visual captured collection layout -->
+          <div class="captured-row" id="player-captured-pieces"></div>
+        </div>
+
+      </section>
+
+      <!-- RIGHT COLUMN: Control Sidebar -->
+      <aside class="sidebar-column" id="sidebar-column">
+        
+        <!-- Room Connection & Lobby Setup Panel -->
+        <header class="top-nav" id="top-nav">
+          <div class="title-section">
+            <h2>P2P Match Engine</h2>
+            <div class="status-indicator-dot" id="board-status-dot" title="Status Indicator"></div>
+          </div>
+
+          <!-- Dynamic Connection and Setup Section -->
+          <div class="connection-bar" id="connection-bar">
+            
+            <!-- Setup State: Format, Create, Join (Host-only configuration controls) -->
+            <div class="setup-controls" id="setup-controls">
+              
+              <!-- Time Format Chooser -->
+              <div class="time-control-setup" id="time-control-setup">
+                <label for="select-time-limit" class="format-label">Clock Format:</label>
+                <select id="select-time-limit" class="time-select-dropdown">
+                  <option value="1">Bullet: 1 min</option>
+                  <option value="3">Blitz: 3 min</option>
+                  <option value="5" selected>Blitz: 5 min</option>
+                  <option value="15">Rapid: 15 min</option>
+                  <option value="1+1">Bullet (Increment): 1 min + 1 sec</option>
+                  <option value="5+5">Blitz (Increment): 5 min + 5 sec</option>
+                  <option value="unlimited">Unlimited (No Time)</option>
+                </select>
+              </div>
+
+              <div class="setup-action-group">
+                <button class="action-btn" id="btn-host-game">Host Game</button>
+                <input type="text" id="input-room-code" placeholder="Code" maxlength="4" pattern="\d{4}" />
+                <button class="action-btn secondary" id="btn-join-game">Join</button>
+              </div>
+            </div>
+
+            <!-- Waiting / Lobby Hosted State -->
+            <div class="waiting-controls" id="waiting-controls" style="display: none;">
+              <span class="room-display">Hosted Room: <strong id="text-room-code">— — — —</strong></span>
+              <div class="lobby-action-buttons">
+                <button class="icon-btn" id="btn-copy-code" title="Copy Code">📋 Copy Code</button>
+                <button class="text-link-btn" id="btn-cancel-lobby">Disconnect</button>
+              </div>
+            </div>
+
+            <!-- Connected Active State -->
+            <div class="connected-controls" id="connected-controls" style="display: none;">
+              <span class="room-display">Match Connected (<span id="active-room-id"></span>)</span>
+              <button class="text-link-btn" id="btn-disconnect-active">Disconnect</button>
+            </div>
+            
+          </div>
+        </header>
+
+        <!-- Recovery Banner -->
+        <section class="recovery-banner" id="recovery-banner" style="display: none;">
+          <span class="recovery-msg">Resume match?</span>
+          <div class="recovery-actions">
+            <button class="action-btn btn-sm" id="btn-recover-yes">Yes</button>
+            <button class="action-btn btn-sm secondary" id="btn-recover-no">No</button>
+          </div>
+        </section>
+
+        <!-- Standard Algebraic Move Log Panel -->
+        <section class="sidebar-panel move-log-panel" id="move-log-panel">
+          <div class="panel-header">Move Log (SAN)</div>
+          <div class="move-log-container" id="move-log-list">
+            <div class="empty-log-msg" id="empty-log-msg">Practice session — play a move to begin log.</div>
+          </div>
+        </section>
+
+        <!-- Footer Tool Settings & Options -->
+        <footer class="bottom-controls" id="bottom-controls">
+          <button class="action-btn btn-sm secondary font-mono" id="btn-reset-board">New Game</button>
+          <button class="action-btn btn-sm secondary" id="btn-flip-board" title="Flip Board">Flip Board</button>
+          <button class="sound-toggle-btn" id="btn-toggle-sound" title="Toggle Sound">
+            <span id="sound-icon">🔊</span>
+          </button>
+        </footer>
+
+      </aside>
+
+    </div>
+
+    <!-- Toast Alert Overlay -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Loaded Game Script -->
+    <script type="module" src="/src/game.js"></script>
+  </body>
+</html>
